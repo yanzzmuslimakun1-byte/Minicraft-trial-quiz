@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minecraft Trial Quiz</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    *{font-family:'VT323',monospace;image-rendering:pixelated}
+    .pixel-font-title{font-family:'Press Start 2P',cursive}
+    .mc-bg{background-color:#1a120c;background-image:radial-gradient(#3a2a1a 15%,transparent 16%),radial-gradient(#2b1e13 15%,transparent 16%);background-size:32px 32px;background-position:0 0,16px 16px}
+    .mc-panel{background:#c6c6c6;border:4px solid #000;box-shadow:inset -4px -4px #555,inset 4px 4px #fff}
+    .mc-panel-dark{background:#313131;border:4px solid #000;box-shadow:inset -4px -4px #1e1e1e,inset 4px 4px #4a4a4a;color:#fff}
+    .mc-btn{background:#707070;border:4px solid #000;box-shadow:inset -4px -4px #3a3a3a,inset 4px 4px #a0a0a0;color:#fff;text-shadow:2px 2px #000;transition:all .1s;position:relative}
+    .mc-btn:hover:not(:disabled){background:#8b8b8b;box-shadow:inset -4px -4px #4a4a4a,inset 4px 4px #b5b5b5}
+    .mc-btn:active:not(:disabled),.mc-btn.selected{background:#4a5c25;box-shadow:inset 4px 4px #1e290d,inset -4px -4px #6a8535;color:#ffffa0}
+    .mc-btn-green{background:#388716;box-shadow:inset -4px -4px #1b470a,inset 4px 4px #5bc42a}
+    .mc-btn-green:hover:not(:disabled){background:#45a61b}
+    .mc-btn-correct{background:#2e7d32!important;box-shadow:inset 4px 4px #1b5e20,inset -4px -4px #4caf50!important;color:#76ff03!important}
+    .mc-btn-wrong{background:#c62828!important;box-shadow:inset 4px 4px #8e0000,inset -4px -4px #ef5350!important;color:#ff8a80!important}
+    .dirt-pattern{background-color:#573d26;background-image:radial-gradient(#3a2717 20%,transparent 20%);background-size:12px 12px}
+    .xp-bar-bg{background:#000;border:2px solid #3d3d3d}
+    .xp-bar-fill{background:#80ff20;box-shadow:inset 0 2px #b3ff66,inset 0 -2px #4dcc00}
+  </style>
+</head>
+<body class="mc-bg min-h-screen text-white flex flex-col justify-between p-3 md:p-6 select-none">
+  <header class="w-full max-w-4xl mx-auto flex justify-between items-center mb-4 mc-panel-dark p-3 rounded">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 bg-green-700 border-2 border-black flex items-center justify-center text-2xl">⛏️</div>
+      <div><h1 class="pixel-font-title text-sm md:text-base text-green-400 tracking-wider">MINECRAFT QUIZ</h1><p class="text-xs text-gray-400">Trial Chambers &amp; Gameplay</p></div>
+    </div>
+    <button id="audio-btn" onclick="toggleMute()" class="mc-btn px-3 py-2 text-xl rounded flex items-center gap-2" title="Toggle Sound">
+      <i id="audio-icon" class="fas fa-volume-up text-yellow-400"></i><span class="text-xs hidden sm:inline" id="audio-text">SOUND ON</span>
+    </button>
+  </header>
+
+  <main class="w-full max-w-3xl mx-auto flex-1 flex flex-col justify-center my-auto">
+    <section id="start-screen" class="mc-panel p-6 md:p-10 text-center text-gray-900 rounded-lg shadow-2xl">
+      <div class="mb-6"><span class="inline-block animate-bounce text-5xl mb-2">🏰</span>
+        <h2 class="pixel-font-title text-lg md:text-2xl text-green-900 mb-3">MINECRAFT TRIAL QUIZ</h2>
+        <p class="text-lg md:text-xl text-gray-800 max-w-md mx-auto leading-tight">Uji pengetahuanmu seputar <b>Trial Chambers</b>, mob <b>Breeze</b>, item <b>Ominous Vault</b>, dan mekanik game Minecraft!</p>
+      </div>
+      <div class="dirt-pattern text-yellow-200 p-4 border-4 border-black mb-6 text-left text-base md:text-lg rounded">
+        <p class="text-yellow-400 font-bold mb-1 border-b border-yellow-600 pb-1">📜 Aturan Main:</p>
+        <ul class="list-disc list-inside space-y-1 text-gray-200">
+          <li>Total <strong>10 Pertanyaan</strong> Pilihan Ganda.</li>
+          <li>Setiap jawaban benar bernilai <strong>10 Poin</strong> (Skor Maksimal: 100).</li>
+          <li>Efek suara saat menjawab dan melihat hasil!</li>
+        </ul>
+      </div>
+      <button onclick="startQuiz()" class="mc-btn mc-btn-green w-full py-4 text-2xl md:text-3xl font-bold tracking-widest uppercase hover:scale-105 transform transition">Mulai Kuis ⚔️</button>
+    </section>
+
+    <section id="quiz-screen" class="hidden mc-panel p-4 md:p-8 text-gray-900 rounded-lg shadow-2xl">
+      <div class="mb-4">
+        <div class="flex justify-between items-center mb-1 text-sm md:text-base font-bold text-gray-800"><span id="question-counter">Soal 1 / 10</span><span id="score-live" class="text-green-800 font-extrabold">Skor: 0</span></div>
+        <div class="xp-bar-bg h-4 w-full rounded-sm overflow-hidden p-0.5"><div id="progress-bar" class="xp-bar-fill h-full transition-all duration-300" style="width:10%"></div></div>
+      </div>
+      <div class="mc-panel-dark p-4 md:p-6 mb-6 rounded"><h3 id="question-text" class="text-xl md:text-2xl text-yellow-300 leading-snug">Memuat pertanyaan...</h3></div>
+      <div id="options-container" class="grid grid-cols-1 gap-3 md:gap-4 mb-6"></div>
+      <div id="feedback-box" class="hidden p-3 rounded text-center text-xl font-bold border-2 border-black"></div>
+      <div class="flex justify-end mt-4"><button id="next-btn" onclick="nextQuestion()" disabled class="mc-btn px-6 py-3 text-xl font-bold opacity-50 cursor-not-allowed">Lanjut ➔</button></div>
+    </section>
+
+    <section id="result-screen" class="hidden mc-panel p-6 md:p-10 text-center text-gray-900 rounded-lg shadow-2xl">
+      <h2 class="pixel-font-title text-xl md:text-2xl text-yellow-900 mb-2">HASIL AKHIR KUIS</h2>
+      <p class="text-gray-700 text-lg mb-4">Uji Pengetahuan Minecraft Trial</p>
+      <div class="dirt-pattern p-6 border-4 border-black mb-6 rounded text-white shadow-inner">
+        <div class="text-gray-300 text-lg mb-1">Skor Kamu:</div>
+        <div id="final-score" class="pixel-font-title text-4xl md:text-6xl text-yellow-400 mb-3">0 / 100</div>
+        <div class="inline-block mc-panel-dark px-4 py-2 rounded text-base md:text-xl border-2 border-yellow-500">Gelar: <span id="rank-title" class="text-green-400 font-bold">Player</span></div>
+        <p id="rank-desc" class="text-sm md:text-base text-gray-300 mt-3 italic">"Terus tingkatkan skill bertualangmu!"</p>
+      </div>
+      <button onclick="restartQuiz()" class="mc-btn mc-btn-green w-full py-4 text-2xl font-bold uppercase tracking-wider mb-2">🔄 Main Lagi</button>
+    </section>
+  </main>
+
+  <footer class="w-full max-w-4xl mx-auto text-center mt-6 py-3 border-t-2 border-gray-800 text-gray-400 text-sm md:text-base">
+    <p class="tracking-widest">Minecraft Trial Quiz &bull; <span class="text-yellow-400 font-bold">by_orang ilang</span></p>
+  </footer>
+
+  <script>
+    let audioCtx=null, isMuted=false;
+    function initAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume()}
+    function tone(freq,type='square',duration=.08,volume=.12,delay=0){
+      if(isMuted)return;initAudio();const osc=audioCtx.createOscillator(),gain=audioCtx.createGain(),t=audioCtx.currentTime+delay;
+      osc.type=type;osc.frequency.setValueAtTime(freq,t);gain.gain.setValueAtTime(volume,t);gain.gain.exponentialRampToValueAtTime(.001,t+duration);
+      osc.connect(gain);gain.connect(audioCtx.destination);osc.start(t);osc.stop(t+duration);
+    }
+    function toggleMute(){
+      isMuted=!isMuted;document.getElementById('audio-icon').className=isMuted?'fas fa-volume-mute text-red-400':'fas fa-volume-up text-yellow-400';
+      document.getElementById('audio-text').innerText=isMuted?'MUTED':'SOUND ON';if(!isMuted)tone(400);
+    }
+    function playClickSound(){tone(400,'square',.05,.15)}
+    function playCorrectSound(){[523.25,659.25,783.99,1046.5].forEach((f,i)=>tone(f,'sine',.15,.16,i*.08))}
+    function playWrongSound(){tone(150,'sawtooth',.25,.2);tone(80,'sawtooth',.25,.12,.12)}
+    function playEndFanfare(){[523.25,659.25,783.99,1046.5,880,1046.5].forEach((f,i)=>tone(f,'triangle',.3,.18,[0,.12,.24,.36,.52,.7][i]))}
+
+    const quizData=[
+      {question:"Struktur bangunan apakah yang diperkenalkan di update Minecraft 1.21 yang berisi tantangan bertarung?",options:["Ocean Monument","Trial Chambers","Ancient City","Woodland Mansion"],answer:1},
+      {question:"Hostile mob unik yang bisa melompat tinggi dan menembakkan angin (Wind Charge) di Trial Chambers adalah...",options:["Breeze","Blaze","Phantom","Bogged"],answer:0},
+      {question:"Varian Skeleton baru beracun yang ditemukan di Trial Chambers dan rawa bernama...",options:["Stray","Husk","Bogged","Wither Skeleton"],answer:2},
+      {question:"Kunci jenis apa yang digunakan untuk membuka 'Ominous Vault' di Trial Chambers?",options:["Trial Key","Ominous Trial Key","Golden Key","Nether Key"],answer:1},
+      {question:"Senjata melee baru yang menambahkan damage besar jika dipukulkan saat pemain jatuh dari ketinggian adalah...",options:["Trident","Heavy Sword","Mace","Battle Axe"],answer:2},
+      {question:"Efek yang didapatkan pemain jika meminum 'Ominous Bottle' adalah...",options:["Bad Omen","Strength II","Hero of the Village","Mining Fatigue"],answer:0},
+      {question:"Bahan pembuatan 'Mace' yang didapat dari Trial Chambers adalah...",options:["Netherite Ingot & Stick","Heavy Core & Breeze Rod","Diamond & Breeze Rod","Echo Shard & Iron"],answer:1},
+      {question:"Apa fungsi dari block 'Trial Spawner'?",options:["Memunculkan gelombang musuh sesuai jumlah pemain dan memberi reward setelah selesai","Memunculkan mob tanpa henti selamanya","Memberikan efek heal ke pemain","Teleportasi pemain ke Nether"],answer:0},
+      {question:"Blok dekoratif utama berwarna oranye/cokelat yang mendominasi struktur Trial Chambers adalah...",options:["Terracotta","Copper Blocks & Tuff","Prismarine","Purpur Block"],answer:1},
+      {question:"Item drop dari Breeze yang digunakan untuk membuat Wind Charge dan Mace adalah...",options:["Blaze Rod","Breeze Rod","Wind Powder","Glowstone Dust"],answer:1}
+    ];
+
+    let currentQuestionIndex=0,score=0,selectedOptionIndex=null;
+    const startScreen=document.getElementById('start-screen'),quizScreen=document.getElementById('quiz-screen'),resultScreen=document.getElementById('result-screen');
+    const questionText=document.getElementById('question-text'),optionsContainer=document.getElementById('options-container');
+    const questionCounter=document.getElementById('question-counter'),scoreLive=document.getElementById('score-live'),progressBar=document.getElementById('progress-bar');
+    const nextBtn=document.getElementById('next-btn'),feedbackBox=document.getElementById('feedback-box');
+
+    function startQuiz(){
+      playClickSound();currentQuestionIndex=0;score=0;startScreen.classList.add('hidden');resultScreen.classList.add('hidden');quizScreen.classList.remove('hidden');loadQuestion();
+    }
+    function loadQuestion(){
+      selectedOptionIndex=null;nextBtn.disabled=true;nextBtn.classList.add('opacity-50','cursor-not-allowed');feedbackBox.classList.add('hidden');
+      const q=quizData[currentQuestionIndex];questionText.innerText=`${currentQuestionIndex+1}. ${q.question}`;
+      questionCounter.innerText=`Soal ${currentQuestionIndex+1} / ${quizData.length}`;scoreLive.innerText=`Skor: ${score}`;
+      progressBar.style.width=`${((currentQuestionIndex+1)/quizData.length)*100}%`;optionsContainer.innerHTML='';
+      q.options.forEach((opt,index)=>{
+        const btn=document.createElement('button');btn.type='button';btn.className='mc-btn w-full p-3 text-left text-lg md:text-xl rounded';
+        btn.innerHTML=`<span class="inline-block w-8 font-bold text-yellow-300">${String.fromCharCode(65+index)}.</span> ${opt}`;
+        btn.addEventListener('click',()=>selectAnswer(index));optionsContainer.appendChild(btn);
+      });
+    }
+    function selectAnswer(index){
+      if(selectedOptionIndex!==null)return;selectedOptionIndex=index;playClickSound();
+      const q=quizData[currentQuestionIndex],buttons=optionsContainer.querySelectorAll('button');
+      buttons.forEach((btn,i)=>{btn.disabled=true;if(i===q.answer)btn.classList.add('mc-btn-correct');else if(i===index)btn.classList.add('mc-btn-wrong')});
+      if(index===q.answer){score+=10;playCorrectSound();feedbackBox.textContent='✓ BENAR! +10 POIN';feedbackBox.className='p-3 rounded text-center text-xl font-bold border-2 border-black bg-green-200 text-green-900'}
+      else{playWrongSound();feedbackBox.textContent=`✗ KURANG TEPAT! Jawaban: ${q.options[q.answer]}`;feedbackBox.className='p-3 rounded text-center text-xl font-bold border-2 border-black bg-red-200 text-red-900'}
+      scoreLive.innerText=`Skor: ${score}`;feedbackBox.classList.remove('hidden');nextBtn.disabled=false;nextBtn.classList.remove('opacity-50','cursor-not-allowed');
+    }
+    function nextQuestion(){
+      if(selectedOptionIndex===null)return;playClickSound();currentQuestionIndex++;
+      if(currentQuestionIndex<quizData.length)loadQuestion();else showResult();
+    }
+    function showResult(){
+      quizScreen.classList.add('hidden');resultScreen.classList.remove('hidden');document.getElementById('final-score').innerText=`${score} / 100`;
+      let rank,desc;
+      if(score===100){rank='LEGEND';desc='"Luar biasa! Kamu master Trial Chambers sejati!"'}
+      else if(score>=80){rank='PRO';desc='"Hebat! Pengetahuan Minecraft-mu sangat kuat!"'}
+      else if(score>=60){rank='ADVENTURER';desc='"Bagus! Sedikit lagi menuju level master!"'}
+      else if(score>=40){rank='ROOKIE';desc='"Terus berlatih dan jelajahi dunia Minecraft!"'}
+      else{rank='BEGINNER';desc='"Jangan menyerah! Coba lagi dan jadilah petualang hebat!"'}
+      document.getElementById('rank-title').innerText=rank;document.getElementById('rank-desc').innerText=desc;playEndFanfare();
+    }
+    function restartQuiz(){playClickSound();resultScreen.classList.add('hidden');startScreen.classList.remove('hidden')}
+  </script>
+</body>
+</html>
